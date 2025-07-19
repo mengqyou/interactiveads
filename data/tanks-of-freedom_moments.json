@@ -1,0 +1,90 @@
+{
+  "game": "tanks-of-freedom",
+  "total_moments_found": 5,
+  "top_moments": [
+    {
+      "name": "Quick Skirmish",
+      "description": "Fast-paced tactical battle with limited units",
+      "engagement_score": 0.9,
+      "mini_game_potential": 0.95,
+      "estimated_play_time": 8,
+      "tutorial_complexity": "medium",
+      "required_assets": [
+        "units_spritesheet.png",
+        "terrain assets"
+      ],
+      "gameplay_mechanics": [
+        "combat",
+        "movement",
+        "tactics"
+      ],
+      "feasibility_score": 0.855
+    },
+    {
+      "name": "Strategy System",
+      "description": "Strategic decision points",
+      "engagement_score": 1.0,
+      "mini_game_potential": 0.8,
+      "estimated_play_time": 5,
+      "tutorial_complexity": "medium",
+      "required_assets": [],
+      "gameplay_mechanics": [
+        "strategy"
+      ],
+      "feasibility_score": 0.8
+    },
+    {
+      "name": "Story Mission Sampler",
+      "description": "Play key moments from campaign missions",
+      "engagement_score": 0.8,
+      "mini_game_potential": 0.85,
+      "estimated_play_time": 10,
+      "tutorial_complexity": "complex",
+      "required_assets": [
+        "all game assets"
+      ],
+      "gameplay_mechanics": [
+        "story",
+        "objectives",
+        "combat"
+      ],
+      "feasibility_score": 0.68
+    },
+    {
+      "name": "Combat System",
+      "description": "Combat interactions",
+      "engagement_score": 0.6299999999999998,
+      "mini_game_potential": 0.9,
+      "estimated_play_time": 5,
+      "tutorial_complexity": "medium",
+      "required_assets": [],
+      "gameplay_mechanics": [
+        "combat"
+      ],
+      "feasibility_score": 0.5669999999999998
+    },
+    {
+      "name": "Character Showcase",
+      "description": "Interactive character selection and preview",
+      "engagement_score": 0.7,
+      "mini_game_potential": 0.8,
+      "estimated_play_time": 3,
+      "tutorial_complexity": "simple",
+      "required_assets": [
+        "assets/units/civilians_spritesheet.png",
+        "assets/units/avatars_spritesheet.png",
+        "assets/units/units_spritesheet.png"
+      ],
+      "gameplay_mechanics": [
+        "selection",
+        "preview"
+      ],
+      "feasibility_score": 0.5599999999999999
+    }
+  ],
+  "recommendations": [
+    "Consider simplifying the top moment for faster development",
+    "Focus on shorter moments for better ad performance",
+    "Multiple gameplay types available - create variety pack"
+  ]
+}

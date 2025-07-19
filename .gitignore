@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Game Data (large files)
+data/repositories/
+*.apk
+*.aab
+
+# Build files
+bin/
+.buildozer/
+p4a/
+
+# Logs
+*.log
+logs/
+
+# Sensitive files
+.env
+*.key
+*.pem
+
+# Cache
+.cache/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Audio/Video (large files)
+*.wav
+*.ogg
+*.mp3
+*.mp4
+
+# Large images
+*.png
+*.jpg
+*.jpeg
+!assets/icons/*.png
+!docs/images/*.png

@@ -1,0 +1,12 @@
+# Android build requirements
+kivy>=2.2.0
+kivymd>=1.1.1
+buildozer>=1.5.0
+python-for-android>=0.13.0
+
+# Core dependencies
+numpy>=1.24.0
+pillow>=10.0.0
+
+# Audio support
+pygame>=2.5.0

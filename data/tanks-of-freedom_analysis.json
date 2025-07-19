@@ -1,0 +1,127 @@
+{
+  "repository": {
+    "name": "tanks-of-freedom",
+    "url": "https://github.com/w84death/Tanks-of-Freedom",
+    "engine": "Godot",
+    "genre": "Strategy",
+    "description": "Turn-based strategy game"
+  },
+  "structure_analysis": {
+    "total_files": 561,
+    "code_files": {
+      ".gd": 198,
+      ".py": 1
+    },
+    "asset_files": {
+      ".jpg": 1,
+      ".png": 85,
+      ".ogg": 4,
+      ".wav": 30
+    },
+    "config_files": [
+      "engine.cfg",
+      "maps/blueprint_units_tileset.xml",
+      "maps/fog_of_war.xml",
+      "maps/underground_tileset.xml",
+      "maps/action_tiles_tileset.xml",
+      "maps/blueprint_terrain_tileset.xml",
+      "buildConfig/export_linux32.cfg",
+      "buildConfig/export_desktop.cfg",
+      "buildConfig/build_android.cfg",
+      "buildConfig/build_linux32.cfg",
+      "buildConfig/engine_desktop.cfg",
+      "buildConfig/build_osx.cfg",
+      "buildConfig/engine_linux32.cfg",
+      "buildConfig/build_linux64.cfg",
+      "buildConfig/engine_osx.cfg",
+      "buildConfig/build_windows.cfg",
+      "buildConfig/engine_android.cfg",
+      "maps/tilesets/summer_tileset.xml",
+      "maps/tilesets/fall_tileset.xml",
+      "maps/tilesets/winter_tileset.xml"
+    ],
+    "readme_info": "# Tanks of Freedom\n\n![Tanks of Freedom](https://i.imgur.com/Xa66BXO.png)\n\n## Tanks of Freedom II\nThis project is no longer being actively developed. Check out the sequel: [Tanks of Freedom II](https://github.com/P1X-in/Tanks-of-Freedom-3-D)\n\n## Indie Turn Based Strategy in Isometric Pixel Art\n\nA classic turn-based strategy game with two armies fighting against each other. Challenge yourself in campaign against AI or hot-seat battle with a friend. Using the easy map editor you can create any imaginable scenario to play and share online for others to discover!\n\n![32 colour](https://i.imgur.com/Oe6y4SO.jpg)\n\nEach 32x32 sprite was handcrafted in gorgeous, 32 colour pixel art. Original soundtrack was made on Access Virus C and Korg Electribe. Sound effects were made on real GameBoy hardware. The game is open-source and runs smoothly thanks to Godot Engine.\n\n## Gamepad Controls\nPlease note, that all controls listed are for the XBox 360 controller gamepad. If you are using a different gamepad",
+    "engine_detected": "Unity"
+  },
+  "asset_analysis": {
+    "total_assets": 120,
+    "by_type": {
+      "image": 86,
+      "audio": 34
+    },
+    "by_category": {
+      "environment": 1,
+      "unknown": 26,
+      "ui": 55,
+      "animation": 1,
+      "character": 3,
+      "effect": 34
+    },
+    "character_assets": 3,
+    "largest_assets": [
+      {
+        "path": "assets/sounds/soundtrack/map_soundtrack_1.ogg",
+        "size_mb": 2.258420944213867
+      },
+      {
+        "path": "assets/sounds/soundtrack/map_soundtrack_2.ogg",
+        "size_mb": 2.240178108215332
+      },
+      {
+        "path": "assets/sounds/soundtrack/menu_soundtrack.ogg",
+        "size_mb": 1.7181425094604492
+      },
+      {
+        "path": "assets/overscan1920.jpg",
+        "size_mb": 0.4247627258300781
+      },
+      {
+        "path": "assets/sounds/soundtrack/intro.ogg",
+        "size_mb": 0.19168567657470703
+      },
+      {
+        "path": "assets/sounds/fx/not_dead.wav",
+        "size_mb": 0.08622932434082031
+      },
+      {
+        "path": "assets/sounds/fx/units/03.helicopter/helicopter_die.wav",
+        "size_mb": 0.07221794128417969
+      },
+      {
+        "path": "assets/sounds/fx/explosion.wav",
+        "size_mb": 0.06049537658691406
+      },
+      {
+        "path": "assets/sounds/fx/end_turn.wav",
+        "size_mb": 0.05758476257324219
+      },
+      {
+        "path": "assets/sounds/fx/units/03.helicopter/helicopter_spawn.wav",
+        "size_mb": 0.04604339599609375
+      }
+    ]
+  },
+  "character_assets": [
+    {
+      "path": "assets/units/civilians_spritesheet.png",
+      "dimensions": [
+        96,
+        63
+      ]
+    },
+    {
+      "path": "assets/units/avatars_spritesheet.png",
+      "dimensions": [
+        192,
+        126
+      ]
+    },
+    {
+      "path": "assets/units/units_spritesheet.png",
+      "dimensions": [
+        96,
+        63
+      ]
+    }
+  ]
+}
