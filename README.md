@@ -53,6 +53,27 @@ python main.py
 python scripts/build_android.py
 ```
 
+## 🎮 How to Play the Generated Game
+
+### Quick Start
+1. **Run the game**: `python main.py` (mobile version) or `python scripts/run_mini_game.py` (desktop)
+2. **Select units**: Click/tap your blue units to select them
+3. **Move**: Click/tap green highlighted areas to move
+4. **Attack**: Click/tap red highlighted areas to attack enemies
+5. **End turn**: Use "End Turn" button when finished
+
+### Game Objective
+- **Win by**: Eliminating all red enemy units OR having more units after 10 turns
+- **Your forces**: 3 blue units (1 tank, 2 soldiers)
+- **Enemy forces**: 3 red AI units (mirrors your setup)
+
+### Strategy Tips
+- **Focus fire**: Attack same enemy with multiple units
+- **Positioning**: Control the center of the 6x6 battlefield
+- **One action per turn**: Each unit can either move OR attack (not both)
+
+*For complete gameplay guide, see [DESIGN_DOCUMENT.md - How to Play](DESIGN_DOCUMENT.md#how-to-play-quick-skirmish)*
+
 ## 📊 Results
 
 ### Successful Analysis: Tanks of Freedom
