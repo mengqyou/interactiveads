@@ -147,8 +147,13 @@ jobs:
         echo "Buildozer SDK paths:"
         grep -E "(ndk_path|sdk_path|ant_path)" buildozer.spec
         
-        # Build debug APK with full verbose logging
-        buildozer --verbose android debug
+        # Build debug APK with maximum logging and error capture
+        buildozer --verbose android debug 2>&1 | tee buildozer_full.log || {
+          echo "=== BUILDOZER FAILED - SHOWING LAST 100 LINES OF LOG ==="
+          tail -100 buildozer_full.log
+          echo "=== END OF BUILDOZER LOG ==="
+          exit 1
+        }
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
