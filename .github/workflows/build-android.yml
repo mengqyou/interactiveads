@@ -81,11 +81,9 @@ jobs:
         mkdir -p .buildozer/android/platform/apache-ant-1.9.4/bin
         
         # Create a dummy ant script to satisfy buildozer
-        cat > .buildozer/android/platform/apache-ant-1.9.4/bin/ant << 'EOF'
-#!/bin/bash
-# Dummy ant script - use system ant instead
-exec ant "$@"
-EOF
+        echo '#!/bin/bash' > .buildozer/android/platform/apache-ant-1.9.4/bin/ant
+        echo '# Dummy ant script - use system ant instead' >> .buildozer/android/platform/apache-ant-1.9.4/bin/ant
+        echo 'exec ant "$@"' >> .buildozer/android/platform/apache-ant-1.9.4/bin/ant
         chmod +x .buildozer/android/platform/apache-ant-1.9.4/bin/ant
         
         # Show what we've created
