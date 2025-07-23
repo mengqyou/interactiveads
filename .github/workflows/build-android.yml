@@ -7,6 +7,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  releases: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -168,11 +172,27 @@ jobs:
           exit 1
         }
         
+        # Check if APK was actually created and show build output structure
+        echo "=== APK BUILD VERIFICATION ==="
+        echo "Current directory contents:"
+        ls -la
+        echo "Bin directory contents:"
+        ls -la bin/ || echo "bin/ directory does not exist"
+        echo "Buildozer directory structure:"
+        find .buildozer -name "*.apk" -type f || echo "No APK files found in .buildozer"
+        echo "All APK files in project:"
+        find . -name "*.apk" -type f || echo "No APK files found anywhere"
+        
     - name: Upload APK
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: supertuxkart-mobile-apk
-        path: bin/*.apk
+        path: |
+          bin/*.apk
+          .buildozer/android/platform/build-**/dist/**/*.apk
+          **/*.apk
+        if-no-files-found: warn
         
     - name: Create Release
       if: github.ref == 'refs/heads/main'
@@ -182,7 +202,9 @@ jobs:
       with:
         tag_name: v1.0.${{ github.run_number }}
         name: SuperTuxKart Mobile v1.0.${{ github.run_number }}
-        files: bin/*.apk
+        files: |
+          bin/*.apk
+          .buildozer/android/platform/build-**/dist/**/*.apk
         body: |
           SuperTuxKart Mobile - Android APK
           
@@ -196,5 +218,10 @@ jobs:
           1. Download APK file
           2. Enable "Install from unknown sources" in Android settings
           3. Install and enjoy!
+          
+          **Build Info:**
+          - GitHub Actions Build #${{ github.run_number }}
+          - Commit: ${{ github.sha }}
         draft: false
         prerelease: false
+        fail_on_unmatched_files: false
