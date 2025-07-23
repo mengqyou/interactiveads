@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -33,19 +33,20 @@ jobs:
         buildozer android debug
         
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: supertuxkart-mobile-apk
         path: bin/*.apk
         
     - name: Create Release
       if: github.ref == 'refs/heads/main'
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: v1.0.${{ github.run_number }}
-        release_name: SuperTuxKart Mobile v1.0.${{ github.run_number }}
+        name: SuperTuxKart Mobile v1.0.${{ github.run_number }}
+        files: bin/*.apk
         body: |
           SuperTuxKart Mobile - Android APK
           
