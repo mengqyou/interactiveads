@@ -26,6 +26,8 @@ jobs:
         sudo apt-get install -y autoconf automake libtool pkg-config cmake
         sudo apt-get install -y build-essential ccache libffi-dev libssl-dev
         sudo apt-get install -y libpng-dev libjpeg-dev zlib1g-dev
+        sudo apt-get install -y python3-dev python3-setuptools
+        sudo apt-get install -y libltdl-dev
 
     - name: Install Python dependencies
       run: |
@@ -120,7 +122,6 @@ jobs:
         # Set environment variables that buildozer checks
         export ANDROIDAPI="30"
         export ANDROIDMINAPI="21"
-        export ANDROIDNDKVER="25b"
         export ANDROIDSDKROOT="$ANDROID_SDK_ROOT"
         export ANDROIDNDKROOT="$ANDROID_NDK_HOME"
         
@@ -137,8 +138,8 @@ jobs:
         echo "Buildozer SDK paths:"
         grep -E "(ndk_path|sdk_path|ant_path)" buildozer.spec
         
-        # Build debug APK with forced use of existing SDK
-        buildozer android debug
+        # Build debug APK with full verbose logging
+        buildozer --verbose android debug
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
