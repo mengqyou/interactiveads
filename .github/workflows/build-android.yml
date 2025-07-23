@@ -52,7 +52,10 @@ jobs:
         
         # Accept licenses and install required components
         yes | sdkmanager --licenses || true
-        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3" "build-tools;36.0.0"
+        
+        # Accept licenses again after installation
+        yes | sdkmanager --licenses || true
         
         # Download Android NDK
         wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
@@ -66,19 +69,36 @@ jobs:
         echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
         echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
+    - name: Verify Android SDK installation
+      run: |
+        echo "Checking Android SDK installation..."
+        ls -la $ANDROID_HOME/
+        echo "Build-tools versions:"
+        ls -la $ANDROID_HOME/build-tools/ || echo "No build-tools directory found"
+        echo "Available packages:"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
+
     - name: Build APK with Buildozer
       run: |
         # Set Java environment
         export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
         
+        # Set Android environment for buildozer
+        export ANDROIDAPI="30"
+        export ANDROIDMINAPI="21"
+        export ANDROIDNDK="$ANDROID_NDK_HOME"
+        export ANDROIDSDKROOT="$ANDROID_HOME"
+        
         # Copy mobile game as main.py
         cp supertuxkart_mobile.py main.py
         
-        # Create buildozer directory to avoid re-download
+        # Create buildozer directory structure and link SDK
         mkdir -p .buildozer/android/platform
+        ln -sf $ANDROID_HOME .buildozer/android/platform/android-sdk
+        ln -sf $ANDROID_NDK_HOME .buildozer/android/platform/android-ndk-r25b
         
-        # Build debug APK
-        buildozer android debug
+        # Build debug APK with verbose output
+        buildozer --verbose android debug
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
