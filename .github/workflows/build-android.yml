@@ -76,7 +76,7 @@ jobs:
         cp -r $ANDROID_SDK_ROOT .buildozer/android/platform/android-sdk
         cp -r $ANDROID_NDK_HOME .buildozer/android/platform/android-ndk-r25b
         
-        # Create the tools directory that buildozer expects with working sdkmanager
+        # Create the tools directory that buildozer expects with working SDK tools
         mkdir -p .buildozer/android/platform/android-sdk/tools/bin
         
         # Create a wrapper sdkmanager that uses the working cmdline-tools version
@@ -87,6 +87,15 @@ jobs:
         echo 'export SKIP_JDK_VERSION_CHECK=true' >> .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
         echo "exec $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \"\$@\"" >> .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
         chmod +x .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+        
+        # Create a wrapper avdmanager that uses the working cmdline-tools version with Java 17
+        echo '#!/bin/bash' > .buildozer/android/platform/android-sdk/tools/bin/avdmanager
+        echo '# Wrapper to use the working cmdline-tools avdmanager with Java 17' >> .buildozer/android/platform/android-sdk/tools/bin/avdmanager
+        echo 'export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64' >> .buildozer/android/platform/android-sdk/tools/bin/avdmanager
+        echo 'export PATH=$JAVA_HOME/bin:$PATH' >> .buildozer/android/platform/android-sdk/tools/bin/avdmanager
+        echo 'export SKIP_JDK_VERSION_CHECK=true' >> .buildozer/android/platform/android-sdk/tools/bin/avdmanager
+        echo "exec $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager \"\$@\"" >> .buildozer/android/platform/android-sdk/tools/bin/avdmanager
+        chmod +x .buildozer/android/platform/android-sdk/tools/bin/avdmanager
         
         # Create apache-ant directory (buildozer expects this)
         mkdir -p .buildozer/android/platform/apache-ant-1.9.4/bin
