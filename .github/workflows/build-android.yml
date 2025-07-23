@@ -97,6 +97,17 @@ jobs:
         echo "exec $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager \"\$@\"" >> .buildozer/android/platform/android-sdk/tools/bin/avdmanager
         chmod +x .buildozer/android/platform/android-sdk/tools/bin/avdmanager
         
+        # CRITICAL: Create wrapper avdmanager in the exact path that python-for-android calls
+        # The error shows it's calling: /cmdline-tools/latest/bin/avdmanager
+        mkdir -p .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin
+        echo '#!/bin/bash' > .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+        echo '# P4A avdmanager wrapper with Java 17' >> .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+        echo 'export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64' >> .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+        echo 'export PATH=$JAVA_HOME/bin:$PATH' >> .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+        echo 'export SKIP_JDK_VERSION_CHECK=true' >> .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+        echo "exec $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager \"\$@\"" >> .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+        chmod +x .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/avdmanager
+        
         # Create apache-ant directory (buildozer expects this)
         mkdir -p .buildozer/android/platform/apache-ant-1.9.4/bin
         
@@ -111,6 +122,8 @@ jobs:
         ls -la .buildozer/android/platform/
         echo "Android SDK build-tools:"
         ls -la .buildozer/android/platform/android-sdk/build-tools/
+        echo "Wrapper scripts created:"
+        ls -la .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/
 
     - name: Build APK with Buildozer
       env:
