@@ -53,18 +53,55 @@ jobs:
         # List installed packages for verification
         sdkmanager --list_installed
 
+    - name: Pre-setup buildozer directories
+      run: |
+        # Create buildozer cache directories and link to pre-installed SDK
+        mkdir -p .buildozer/android/platform
+        
+        # Create symbolic links to prevent buildozer from downloading SDK
+        ln -sf $ANDROID_SDK_ROOT .buildozer/android/platform/android-sdk
+        ln -sf $ANDROID_NDK_HOME .buildozer/android/platform/android-ndk-r25b
+        
+        # Create apache-ant link (buildozer expects this)
+        mkdir -p $ANDROID_SDK_ROOT/apache-ant
+        ln -sf $ANDROID_SDK_ROOT/apache-ant .buildozer/android/platform/apache-ant-1.9.4
+        
+        # Show what we've linked
+        echo "Buildozer directory structure:"
+        ls -la .buildozer/android/platform/
+        echo "Android SDK build-tools:"
+        ls -la $ANDROID_SDK_ROOT/build-tools/
+
     - name: Build APK with Buildozer
       run: |
         # Copy mobile game as main.py
         cp supertuxkart_mobile.py main.py
         
+        # Update buildozer.spec with actual SDK paths
+        sed -i "s|android.ndk_path = .*|android.ndk_path = $ANDROID_NDK_HOME|g" buildozer.spec
+        sed -i "s|android.sdk_path = .*|android.sdk_path = $ANDROID_SDK_ROOT|g" buildozer.spec
+        sed -i "s|android.ant_path = .*|android.ant_path = $ANDROID_SDK_ROOT/apache-ant|g" buildozer.spec
+        
+        # Set environment variables that buildozer checks
+        export ANDROIDAPI="30"
+        export ANDROIDMINAPI="21"
+        export ANDROIDNDKVER="25b"
+        export ANDROIDSDKROOT="$ANDROID_SDK_ROOT"
+        export ANDROIDNDKROOT="$ANDROID_NDK_HOME"
+        
         # Show environment for debugging
+        echo "Build environment:"
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"  
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+        echo "ANDROIDSDKROOT: $ANDROIDSDKROOT"
         echo "JAVA_HOME: $JAVA_HOME"
         
-        # Build debug APK
+        # Show updated buildozer.spec paths
+        echo "Buildozer SDK paths:"
+        grep -E "(ndk_path|sdk_path|ant_path)" buildozer.spec
+        
+        # Build debug APK with forced use of existing SDK
         buildozer android debug
         
     - name: Upload APK
