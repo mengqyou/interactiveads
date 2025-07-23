@@ -17,6 +17,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.vector import Vector
 from kivy.event import EventDispatcher
+from kivy.core.audio import SoundLoader
 
 import math
 import random

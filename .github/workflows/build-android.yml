@@ -1,0 +1,63 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install buildozer cython kivy
+
+    - name: Build APK with Buildozer
+      run: |
+        # Copy mobile game as main.py
+        cp supertuxkart_mobile.py main.py
+        
+        # Build debug APK
+        buildozer android debug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: supertuxkart-mobile-apk
+        path: bin/*.apk
+        
+    - name: Create Release
+      if: github.ref == 'refs/heads/main'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        release_name: SuperTuxKart Mobile v1.0.${{ github.run_number }}
+        body: |
+          SuperTuxKart Mobile - Android APK
+          
+          🏎️ **Features:**
+          - 3-phase gameplay: Speed Circuit → Arena Battle → Final Showdown
+          - Touch controls optimized for mobile
+          - 6 powerup types with authentic physics
+          - 5-8 minute gaming sessions perfect for ads
+          
+          📱 **Installation:**
+          1. Download APK file
+          2. Enable "Install from unknown sources" in Android settings
+          3. Install and enjoy!
+        draft: false
+        prerelease: false

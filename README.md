@@ -1,6 +1,6 @@
-# AI-Powered Interactive Ad Generation System
+# 🏎️ SuperTuxKart Mobile - Interactive Ad Mini-Game
 
-An AI system that analyzes open source games and automatically generates playable mini-games for interactive advertising.
+A mobile-optimized mini-game based on the 129MB SuperTuxKart racing game, designed for interactive advertising and Android deployment via GitHub Actions.
 
 ## 🎮 Project Overview
 
