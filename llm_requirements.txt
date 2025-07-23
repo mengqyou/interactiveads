@@ -1,0 +1,20 @@
+# LLM API Dependencies
+anthropic>=0.25.0
+openai>=1.30.0
+google-generativeai>=0.8.0
+
+# Existing dependencies
+gitpython>=3.1.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+pillow>=10.0.0
+opencv-python>=4.8.0
+
+# Game Development
+pygame>=2.5.0
+kivy>=2.2.0
+kivymd>=1.1.1
+
+# Core ML/Data
+numpy>=1.24.0
+pandas>=2.0.0
