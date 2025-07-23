@@ -46,7 +46,13 @@ jobs:
         java-version: '11'
 
     - name: Install additional build tools and accept licenses
+      env:
+        SKIP_JDK_VERSION_CHECK: true
       run: |
+        # Use Java 17 for SDK manager (required) but skip version check
+        export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+        export PATH=$JAVA_HOME/bin:$PATH
+        
         # Accept all licenses first
         yes | sdkmanager --licenses
         
@@ -79,11 +85,13 @@ jobs:
         ls -la $ANDROID_SDK_ROOT/build-tools/
 
     - name: Build APK with Buildozer
+      env:
+        SKIP_JDK_VERSION_CHECK: true
       run: |
         # Copy mobile game as main.py
         cp supertuxkart_mobile.py main.py
         
-        # Set Java 11 environment (required for Android SDK tools)
+        # Set Java 11 environment (buildozer and python-for-android work better with Java 11)
         export JAVA_HOME=/usr/lib/jvm/temurin-11-jdk-amd64
         export PATH=$JAVA_HOME/bin:$PATH
         
