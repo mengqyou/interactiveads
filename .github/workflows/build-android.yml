@@ -67,22 +67,32 @@ jobs:
 
     - name: Pre-setup buildozer directories
       run: |
-        # Create buildozer cache directories and link to pre-installed SDK
+        # Create buildozer cache directories and completely populate them
         mkdir -p .buildozer/android/platform
         
-        # Create symbolic links to prevent buildozer from downloading SDK
-        ln -sf $ANDROID_SDK_ROOT .buildozer/android/platform/android-sdk
-        ln -sf $ANDROID_NDK_HOME .buildozer/android/platform/android-ndk-r25b
+        # Copy (don't link) SDK to buildozer location to avoid path issues
+        cp -r $ANDROID_SDK_ROOT .buildozer/android/platform/android-sdk
+        cp -r $ANDROID_NDK_HOME .buildozer/android/platform/android-ndk-r25b
         
-        # Create apache-ant link (buildozer expects this)
-        mkdir -p $ANDROID_SDK_ROOT/apache-ant
-        ln -sf $ANDROID_SDK_ROOT/apache-ant .buildozer/android/platform/apache-ant-1.9.4
+        # Remove problematic old SDK tools that cause Java version issues
+        rm -rf .buildozer/android/platform/android-sdk/tools
         
-        # Show what we've linked
+        # Create apache-ant directory (buildozer expects this)
+        mkdir -p .buildozer/android/platform/apache-ant-1.9.4/bin
+        
+        # Create a dummy ant script to satisfy buildozer
+        cat > .buildozer/android/platform/apache-ant-1.9.4/bin/ant << 'EOF'
+#!/bin/bash
+# Dummy ant script - use system ant instead
+exec ant "$@"
+EOF
+        chmod +x .buildozer/android/platform/apache-ant-1.9.4/bin/ant
+        
+        # Show what we've created
         echo "Buildozer directory structure:"
         ls -la .buildozer/android/platform/
         echo "Android SDK build-tools:"
-        ls -la $ANDROID_SDK_ROOT/build-tools/
+        ls -la .buildozer/android/platform/android-sdk/build-tools/
 
     - name: Build APK with Buildozer
       env:
@@ -95,10 +105,10 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/temurin-11-jdk-amd64
         export PATH=$JAVA_HOME/bin:$PATH
         
-        # Update buildozer.spec with actual SDK paths
-        sed -i "s|android.ndk_path = .*|android.ndk_path = $ANDROID_NDK_HOME|g" buildozer.spec
-        sed -i "s|android.sdk_path = .*|android.sdk_path = $ANDROID_SDK_ROOT|g" buildozer.spec
-        sed -i "s|android.ant_path = .*|android.ant_path = $ANDROID_SDK_ROOT/apache-ant|g" buildozer.spec
+        # Update buildozer.spec with buildozer cache paths (relative to project)
+        sed -i "s|android.ndk_path = .*|android.ndk_path = .buildozer/android/platform/android-ndk-r25b|g" buildozer.spec
+        sed -i "s|android.sdk_path = .*|android.sdk_path = .buildozer/android/platform/android-sdk|g" buildozer.spec
+        sed -i "s|android.ant_path = .*|android.ant_path = .buildozer/android/platform/apache-ant-1.9.4|g" buildozer.spec
         
         # Set environment variables that buildozer checks
         export ANDROIDAPI="30"
