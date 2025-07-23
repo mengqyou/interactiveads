@@ -33,72 +33,39 @@ jobs:
         pip install buildozer cython kivy
 
     - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 30
+        build-tools: 30.0.3
+        ndk-version: 25.2.9519653
+
+    - name: Install additional build tools and accept licenses
       run: |
-        # Set up Android SDK environment
-        export ANDROID_HOME="$HOME/android-sdk"
-        export ANDROID_SDK_ROOT="$ANDROID_HOME"
-        mkdir -p $ANDROID_HOME
+        # Accept all licenses first
+        yes | sdkmanager --licenses
         
-        # Download and setup Android command line tools
-        cd $ANDROID_HOME
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-        unzip -q commandlinetools-linux-8512546_latest.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
-        rm commandlinetools-linux-8512546_latest.zip
-        
-        # Add to PATH
-        export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-        
-        # Accept licenses and install required components
-        yes | sdkmanager --licenses || true
-        sdkmanager "platform-tools" "platforms;android-30" "build-tools;30.0.3" "build-tools;36.0.0"
+        # Install additional build-tools versions that buildozer might need
+        sdkmanager "build-tools;36.0.0" "build-tools;33.0.2" "build-tools;34.0.0"
         
         # Accept licenses again after installation
-        yes | sdkmanager --licenses || true
+        yes | sdkmanager --licenses
         
-        # Download Android NDK
-        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
-        unzip -q android-ndk-r25b-linux.zip
-        export ANDROID_NDK_HOME="$ANDROID_HOME/android-ndk-r25b"
-        
-        # Save environment for next steps
-        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV  
-        echo "ANDROID_NDK_HOME=$ANDROID_HOME/android-ndk-r25b" >> $GITHUB_ENV
-        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-
-    - name: Verify Android SDK installation
-      run: |
-        echo "Checking Android SDK installation..."
-        ls -la $ANDROID_HOME/
-        echo "Build-tools versions:"
-        ls -la $ANDROID_HOME/build-tools/ || echo "No build-tools directory found"
-        echo "Available packages:"
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
+        # List installed packages for verification
+        sdkmanager --list_installed
 
     - name: Build APK with Buildozer
       run: |
-        # Set Java environment
-        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-        
-        # Set Android environment for buildozer
-        export ANDROIDAPI="30"
-        export ANDROIDMINAPI="21"
-        export ANDROIDNDK="$ANDROID_NDK_HOME"
-        export ANDROIDSDKROOT="$ANDROID_HOME"
-        
         # Copy mobile game as main.py
         cp supertuxkart_mobile.py main.py
         
-        # Create buildozer directory structure and link SDK
-        mkdir -p .buildozer/android/platform
-        ln -sf $ANDROID_HOME .buildozer/android/platform/android-sdk
-        ln -sf $ANDROID_NDK_HOME .buildozer/android/platform/android-ndk-r25b
+        # Show environment for debugging
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"  
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+        echo "JAVA_HOME: $JAVA_HOME"
         
-        # Build debug APK with verbose output
-        buildozer --verbose android debug
+        # Build debug APK
+        buildozer android debug
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
