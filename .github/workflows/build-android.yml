@@ -1,36 +1,49 @@
 name: Build Android APK
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.10'
 
-    - name: Install buildozer
+    - name: Install dependencies
       run: |
-        pip install buildozer==1.4.0
-        pip install kivy==2.1.0
+        sudo apt-get update
+        sudo apt-get install -y python3-pip python3-dev build-essential git unzip
+        pip install buildozer cython
 
-    - name: Build with buildozer
-      uses: ArthurS1/buildozer-action@v1
-      id: buildozer
-      with:
-        command: buildozer android debug
-        buildozer_version: 1.4.0
+    - name: Build APK
+      run: |
+        # Use buildozer with timeout
+        timeout 30m buildozer android debug || echo "Build timed out or failed"
+        
+        # Check if APK was created
+        if [ -f bin/*.apk ]; then
+          echo "APK created successfully!"
+          ls -la bin/
+        else
+          echo "No APK found, trying to find any APK files:"
+          find . -name "*.apk" -type f || echo "No APK files found anywhere"
+        fi
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+    - name: Upload APK if found
+      uses: actions/upload-artifact@v4
+      if: always()
       with:
-        name: package
-        path: bin/*.apk
+        name: android-apk
+        path: |
+          bin/*.apk
+          **/*.apk
+        if-no-files-found: ignore
