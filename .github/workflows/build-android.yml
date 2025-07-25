@@ -181,6 +181,12 @@ jobs:
         find .buildozer -name "*.apk" -type f || echo "No APK files found in .buildozer"
         echo "All APK files in project:"
         find . -name "*.apk" -type f || echo "No APK files found anywhere"
+        echo "Webview bootstrap specific locations:"
+        find .buildozer -name "*supertuxkartmobile*" -type f || echo "No supertuxkartmobile files found"
+        find .buildozer -path "*webview*" -name "*.apk" -type f || echo "No webview APK files found"
+        find .buildozer -path "*dist*" -type f -name "*.apk" -o -name "*.aab" || echo "No dist APK/AAB files found"
+        echo "Complete buildozer build output structure:"
+        find .buildozer/android/platform/build-* -type f -name "*.apk" -o -name "*.aab" || echo "No APK/AAB files in build output"
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -190,7 +196,11 @@ jobs:
         path: |
           bin/*.apk
           .buildozer/android/platform/build-**/dist/**/*.apk
+          .buildozer/android/platform/build-**/dists/**/*.apk
+          .buildozer/**/bin/*.apk
+          .buildozer/**/*supertuxkartmobile*.apk
           **/*.apk
+          **/*.aab
         if-no-files-found: warn
         
     - name: Create Release
@@ -204,6 +214,9 @@ jobs:
         files: |
           bin/*.apk
           .buildozer/android/platform/build-**/dist/**/*.apk
+          .buildozer/android/platform/build-**/dists/**/*.apk
+          .buildozer/**/bin/*.apk
+          .buildozer/**/*supertuxkartmobile*.apk
         body: |
           SuperTuxKart Mobile - Android APK
           
