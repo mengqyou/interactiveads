@@ -33,3 +33,12 @@ android.skip_update = True
 
 # (bool) If True, then automatically accept SDK license
 android.accept_sdk_license = True
+
+# (str) Path to the Android SDK
+android.sdk_path = .buildozer/android/platform/android-sdk
+
+# (str) Path to the Android NDK
+android.ndk_path = .buildozer/android/platform/android-ndk-r23b
+
+# (str) Path to the Apache Ant
+android.ant_path = .buildozer/android/platform/apache-ant-1.9.4
