@@ -3,72 +3,34 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container:
-      image: kivy/python-for-android:latest
+    runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: |
-        apt-get update
-        apt-get install -y git
-        pip install kivy
-
-    - name: Build APK with p4a directly
-      run: |
-        # Create distribution
-        p4a create --private . --package org.interactiveads.supertuxkartmobile --name "SuperTuxKart Mobile" --version 1.0 --bootstrap sdl2 --requirements python3,kivy --arch armeabi-v7a --dist-name supertuxkart
-
-        # Build APK
-        p4a apk --private . --package org.interactiveads.supertuxkartmobile --name "SuperTuxKart Mobile" --version 1.0 --bootstrap sdl2 --requirements python3,kivy --arch armeabi-v7a --dist-name supertuxkart --debug
-
-        # Find and copy APK
-        find . -name "*.apk" -type f
-        mkdir -p bin
-        find . -name "*.apk" -exec cp {} bin/ \;
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      if: always()
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        name: android-apk
-        path: |
-          bin/*.apk
-          **/*.apk
-        if-no-files-found: warn
+        python-version: '3.9'
 
-    - name: Create Release
-      if: github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install buildozer
+      run: |
+        pip install buildozer==1.4.0
+        pip install kivy==2.1.0
+
+    - name: Build with buildozer
+      uses: ArthurS1/buildozer-action@v1
+      id: buildozer
       with:
-        tag_name: v1.0.${{ github.run_number }}
-        name: SuperTuxKart Mobile v1.0.${{ github.run_number }}
-        files: bin/*.apk
-        body: |
-          SuperTuxKart Mobile Android APK - Built with p4a directly
-          
-          🏎️ Features:
-          - Simple racing simulation game
-          - Mobile-optimized touch controls
-          - 5-second quick races with random results
-          
-          📱 Installation:
-          1. Download APK file
-          2. Enable "Install from unknown sources" in Android settings
-          3. Install and enjoy!
-        draft: false
-        prerelease: false
-        fail_on_unmatched_files: false
+        command: buildozer android debug
+        buildozer_version: 1.4.0
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: package
+        path: bin/*.apk
