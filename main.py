@@ -1,345 +1,199 @@
 #!/usr/bin/env python3
 """
-SuperTuxKart Mobile Web - Simple HTTP Server for Android WebView
-Simplified web-based version using only Python standard library
+SuperTuxKart Mobile - Simple Kivy App
+Minimal tactical game for Android APK building
 """
 
-import http.server
-import socketserver
-import json
+from kivy.app import App
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.boxlayout import BoxLayout
 import random
-import urllib.parse
-import os
 
-# Simple game state
-game_state = {
-    "turn": 1,
-    "max_turns": 10,
-    "player_units": [
-        {"id": 1, "type": "tank", "x": 0, "y": 0, "hp": 3, "selected": False},
-        {"id": 2, "type": "soldier", "x": 1, "y": 0, "hp": 2, "selected": False},
-        {"id": 3, "type": "soldier", "x": 2, "y": 0, "hp": 2, "selected": False}
-    ],
-    "enemy_units": [
-        {"id": 4, "type": "tank", "x": 3, "y": 5, "hp": 3, "selected": False},
-        {"id": 5, "type": "soldier", "x": 4, "y": 5, "hp": 2, "selected": False},
-        {"id": 6, "type": "soldier", "x": 5, "y": 5, "hp": 2, "selected": False}
-    ],
-    "selected_unit": None,
-    "game_over": False,
-    "winner": None
-}
-
-HTML_TEMPLATE = """<!DOCTYPE html>
-<html>
-<head>
-    <title>SuperTuxKart Mobile</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { 
-            margin: 0; 
-            padding: 10px; 
-            font-family: Arial, sans-serif; 
-            background: #2c3e50;
-            color: white;
-        }
-        .game-container { 
-            max-width: 400px; 
-            margin: 0 auto; 
-        }
-        .game-board { 
-            display: grid; 
-            grid-template-columns: repeat(6, 1fr); 
-            gap: 2px; 
-            background: #34495e;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        .cell { 
-            aspect-ratio: 1;
-            background: #95a5a6;
-            border: 1px solid #7f8c8d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .cell.player { background: #3498db; }
-        .cell.enemy { background: #e74c3c; }
-        .cell.selected { box-shadow: 0 0 10px #f1c40f; }
-        .cell.movable { background: #2ecc71; }
-        .cell.attackable { background: #e67e22; }
-        .info { 
-            text-align: center; 
-            margin: 10px 0; 
-            padding: 10px;
-            background: #34495e;
-            border-radius: 8px;
-        }
-        .controls { 
-            text-align: center; 
-            margin: 10px 0; 
-        }
-        button { 
-            background: #e74c3c; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            border-radius: 5px;
-            margin: 5px;
-        }
-        button:hover { background: #c0392b; }
-        .unit-info {
-            font-size: 12px;
-            margin-top: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="game-container">
-        <div class="info">
-            <h2>🏎️ SuperTuxKart Mobile</h2>
-            <div>Turn: {turn}/{max_turns}</div>
-            <div class="unit-info">
-                Player Units: {player_count} | Enemy Units: {enemy_count}
-            </div>
-        </div>
+class GameGrid(GridLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cols = 6
+        self.rows = 6
+        self.spacing = 2
+        self.padding = 10
         
-        <div class="game-board" id="gameBoard">
-            {board_html}
-        </div>
+        # Game state
+        self.selected_unit = None
+        self.turn = 1
+        self.max_turns = 10
         
-        <div class="controls">
-            {controls_html}
-        </div>
+        # Units: [x, y, hp, team] where team: 0=player, 1=enemy
+        self.units = [
+            [0, 0, 3, 0], [1, 0, 2, 0], [2, 0, 2, 0],  # Player units
+            [3, 5, 3, 1], [4, 5, 2, 1], [5, 5, 2, 1]   # Enemy units
+        ]
         
-        <div class="info">
-            <div style="font-size: 14px;">
-                💡 Tap your blue units to select, then tap green areas to move or red areas to attack!
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function cellClick(x, y) {{
-            fetch('/action?action=cell_click&x=' + x + '&y=' + y)
-                .then(() => location.reload());
-        }}
+        # Create grid buttons
+        self.buttons = []
+        for i in range(36):  # 6x6 grid
+            btn = Button(
+                text='',
+                size_hint=(1, 1),
+                font_size='20sp'
+            )
+            btn.bind(on_press=self.cell_clicked)
+            btn.row = i // 6
+            btn.col = i % 6
+            self.buttons.append(btn)
+            self.add_widget(btn)
         
-        function endTurn() {{
-            fetch('/action?action=end_turn')
-                .then(() => location.reload());
-        }}
-        
-        function resetGame() {{
-            fetch('/action?action=reset')
-                .then(() => location.reload());
-        }}
-    </script>
-</body>
-</html>"""
-
-def get_unit_at(x, y):
-    """Get unit at specific coordinates"""
-    for unit in game_state["player_units"] + game_state["enemy_units"]:
-        if unit["x"] == x and unit["y"] == y and unit["hp"] > 0:
-            return unit
-    return None
-
-def get_cell_class(x, y, unit):
-    """Get CSS class for cell"""
-    classes = []
-    if unit:
-        if unit in game_state["player_units"]:
-            classes.append("player")
-        else:
-            classes.append("enemy")
-        if unit.get("selected"):
-            classes.append("selected")
+        self.update_display()
     
-    # Show possible moves/attacks for selected unit
-    selected = game_state.get("selected_unit")
-    if selected and not unit:
-        distance = abs(x - selected["x"]) + abs(y - selected["y"])
-        if distance == 1:  # Adjacent cell
-            classes.append("movable")
-    elif selected and unit and unit not in game_state["player_units"]:
-        distance = abs(x - selected["x"]) + abs(y - selected["y"])
-        if distance == 1:  # Adjacent enemy
-            classes.append("attackable")
+    def get_unit_at(self, x, y):
+        """Get unit at position"""
+        for i, unit in enumerate(self.units):
+            if unit[0] == x and unit[1] == y and unit[2] > 0:
+                return i
+        return None
     
-    return " ".join(classes)
-
-def get_unit_symbol(unit):
-    """Get emoji symbol for unit"""
-    if unit["type"] == "tank":
-        return "🚗" if unit in game_state["player_units"] else "🔴"
-    else:
-        return "👤" if unit in game_state["player_units"] else "💀"
-
-def generate_board_html():
-    """Generate the game board HTML"""
-    html = ""
-    for row in range(6):
-        for col in range(6):
-            unit = get_unit_at(col, row)
-            cell_class = get_cell_class(col, row, unit)
-            symbol = get_unit_symbol(unit) if unit else ""
-            html += f'<div class="cell {cell_class}" onclick="cellClick({col}, {row})">{symbol}</div>'
-    return html
-
-def generate_controls_html():
-    """Generate the controls HTML"""
-    if game_state["game_over"]:
-        return f'''
-            <div style="font-size: 20px; margin: 10px;">
-                🎉 {game_state["winner"]} Wins! 🎉
-            </div>
-            <button onclick="resetGame()">New Game</button>
-        '''
-    else:
-        return '''
-            <button onclick="endTurn()">End Turn</button>
-            <button onclick="resetGame()">Reset Game</button>
-        '''
-
-def handle_action(action, x=None, y=None):
-    """Handle game actions"""
-    if action == 'cell_click' and x is not None and y is not None:
-        unit = get_unit_at(x, y)
+    def cell_clicked(self, button):
+        """Handle cell click"""
+        x, y = button.col, button.row
+        unit_idx = self.get_unit_at(x, y)
         
         # Select player unit
-        if unit and unit in game_state["player_units"] and unit["hp"] > 0:
-            # Deselect all units
-            for u in game_state["player_units"] + game_state["enemy_units"]:
-                u["selected"] = False
-            # Select this unit
-            unit["selected"] = True
-            game_state["selected_unit"] = unit
+        if unit_idx is not None and self.units[unit_idx][3] == 0 and self.units[unit_idx][2] > 0:
+            self.selected_unit = unit_idx
+            self.update_display()
         
-        # Move or attack with selected unit
-        elif game_state.get("selected_unit"):
-            selected = game_state["selected_unit"]
-            distance = abs(x - selected["x"]) + abs(y - selected["y"])
+        # Move/attack with selected unit
+        elif self.selected_unit is not None:
+            selected = self.units[self.selected_unit]
+            distance = abs(x - selected[0]) + abs(y - selected[1])
             
             if distance == 1:  # Adjacent cell
-                if unit and unit not in game_state["player_units"]:
+                if unit_idx is not None and self.units[unit_idx][3] == 1:
                     # Attack enemy
-                    unit["hp"] -= 1
-                    if unit["hp"] <= 0:
-                        unit["x"] = -1  # Remove from board
-                        unit["y"] = -1
-                elif not unit:
+                    self.units[unit_idx][2] -= 1
+                    if self.units[unit_idx][2] <= 0:
+                        self.units[unit_idx][0] = -1  # Remove from board
+                        self.units[unit_idx][1] = -1
+                elif unit_idx is None:
                     # Move to empty cell
-                    selected["x"] = x
-                    selected["y"] = y
+                    selected[0] = x
+                    selected[1] = y
                 
-                # Deselect after action
-                selected["selected"] = False
-                game_state["selected_unit"] = None
+                self.selected_unit = None
+                self.ai_turn()
+                self.update_display()
     
-    elif action == 'end_turn':
-        # Simple AI: move random enemy toward player
-        enemies = [u for u in game_state["enemy_units"] if u["hp"] > 0]
+    def ai_turn(self):
+        """Simple AI turn"""
+        enemies = [i for i, unit in enumerate(self.units) if unit[3] == 1 and unit[2] > 0]
         if enemies:
-            enemy = random.choice(enemies)
+            enemy_idx = random.choice(enemies)
+            enemy = self.units[enemy_idx]
             # Move toward center
-            if enemy["x"] > 2:
-                enemy["x"] -= 1
-            elif enemy["x"] < 2:
-                enemy["x"] += 1
-            if enemy["y"] > 2:
-                enemy["y"] -= 1
+            if enemy[0] > 2:
+                enemy[0] -= 1
+            elif enemy[0] < 2:
+                enemy[0] += 1
+            if enemy[1] > 2:
+                enemy[1] -= 1
         
-        game_state["turn"] += 1
-        
-        # Check win conditions
-        player_alive = any(u["hp"] > 0 for u in game_state["player_units"])
-        enemy_alive = any(u["hp"] > 0 for u in game_state["enemy_units"])
-        
-        if not player_alive:
-            game_state["game_over"] = True
-            game_state["winner"] = "Enemy"
-        elif not enemy_alive:
-            game_state["game_over"] = True
-            game_state["winner"] = "Player"
-        elif game_state["turn"] > game_state["max_turns"]:
-            game_state["game_over"] = True
-            player_count = len([u for u in game_state["player_units"] if u["hp"] > 0])
-            enemy_count = len([u for u in game_state["enemy_units"] if u["hp"] > 0])
-            game_state["winner"] = "Player" if player_count > enemy_count else "Enemy"
+        self.turn += 1
     
-    elif action == 'reset':
-        # Reset game state
-        game_state.update({
-            "turn": 1,
-            "selected_unit": None,
-            "game_over": False,
-            "winner": None
-        })
-        # Reset units
-        game_state["player_units"] = [
-            {"id": 1, "type": "tank", "x": 0, "y": 0, "hp": 3, "selected": False},
-            {"id": 2, "type": "soldier", "x": 1, "y": 0, "hp": 2, "selected": False},
-            {"id": 3, "type": "soldier", "x": 2, "y": 0, "hp": 2, "selected": False}
-        ]
-        game_state["enemy_units"] = [
-            {"id": 4, "type": "tank", "x": 3, "y": 5, "hp": 3, "selected": False},
-            {"id": 5, "type": "soldier", "x": 4, "y": 5, "hp": 2, "selected": False},
-            {"id": 6, "type": "soldier", "x": 5, "y": 5, "hp": 2, "selected": False}
-        ]
+    def update_display(self):
+        """Update button display"""
+        # Clear all buttons
+        for btn in self.buttons:
+            btn.text = ''
+            btn.background_color = (0.5, 0.5, 0.5, 1)
+        
+        # Show units
+        for i, unit in enumerate(self.units):
+            if unit[2] > 0:  # Unit is alive
+                x, y = unit[0], unit[1]
+                if 0 <= x < 6 and 0 <= y < 6:
+                    btn_idx = y * 6 + x
+                    btn = self.buttons[btn_idx]
+                    
+                    if unit[3] == 0:  # Player unit
+                        btn.text = '🚗' if i == 0 else '👤'
+                        btn.background_color = (0.2, 0.4, 1, 1)  # Blue
+                        if i == self.selected_unit:
+                            btn.background_color = (1, 1, 0, 1)  # Yellow when selected
+                    else:  # Enemy unit
+                        btn.text = '🔴' if i == 3 else '💀'
+                        btn.background_color = (1, 0.2, 0.2, 1)  # Red
+        
+        # Show possible moves for selected unit
+        if self.selected_unit is not None:
+            selected = self.units[self.selected_unit]
+            sx, sy = selected[0], selected[1]
+            
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    if abs(dx) + abs(dy) == 1:  # Adjacent only
+                        nx, ny = sx + dx, sy + dy
+                        if 0 <= nx < 6 and 0 <= ny < 6:
+                            btn_idx = ny * 6 + nx
+                            btn = self.buttons[btn_idx]
+                            unit_there = self.get_unit_at(nx, ny)
+                            
+                            if unit_there is None:
+                                btn.background_color = (0, 1, 0, 0.5)  # Green for move
+                            elif self.units[unit_there][3] == 1:
+                                btn.background_color = (1, 0.5, 0, 0.8)  # Orange for attack
 
-class GameHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == '/':
-            # Serve main game page
-            player_count = len([u for u in game_state["player_units"] if u["hp"] > 0])
-            enemy_count = len([u for u in game_state["enemy_units"] if u["hp"] > 0])
-            
-            html = HTML_TEMPLATE.format(
-                turn=game_state["turn"],
-                max_turns=game_state["max_turns"],
-                player_count=player_count,
-                enemy_count=enemy_count,
-                board_html=generate_board_html(),
-                controls_html=generate_controls_html()
-            )
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write(html.encode())
-            
-        elif self.path.startswith('/action'):
-            # Handle game actions
-            parsed = urllib.parse.urlparse(self.path)
-            params = urllib.parse.parse_qs(parsed.query)
-            
-            action = params.get('action', [None])[0]
-            x = int(params.get('x', [0])[0]) if params.get('x') else None
-            y = int(params.get('y', [0])[0]) if params.get('y') else None
-            
-            handle_action(action, x, y)
-            
-            # Return simple response
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'OK')
-        else:
-            # Default 404
-            self.send_response(404)
-            self.end_headers()
-
-def main():
-    PORT = 5000
-    with socketserver.TCPServer(("0.0.0.0", PORT), GameHandler) as httpd:
-        print(f"SuperTuxKart Mobile server running on port {PORT}")
-        httpd.serve_forever()
+class SuperTuxKartMobileApp(App):
+    def build(self):
+        self.title = 'SuperTuxKart Mobile'
+        
+        root = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        
+        # Title
+        title = Label(
+            text='🏎️ SuperTuxKart Mobile',
+            size_hint=(1, 0.1),
+            font_size='24sp',
+            color=(1, 1, 1, 1)
+        )
+        root.add_widget(title)
+        
+        # Game info
+        self.info_label = Label(
+            text='Tap blue units to select, then tap adjacent cells to move/attack',
+            size_hint=(1, 0.1),
+            font_size='14sp',
+            color=(1, 1, 1, 1)
+        )
+        root.add_widget(self.info_label)
+        
+        # Game grid
+        self.game_grid = GameGrid(size_hint=(1, 0.7))
+        root.add_widget(self.game_grid)
+        
+        # Controls
+        controls = BoxLayout(orientation='horizontal', size_hint=(1, 0.1), spacing=10)
+        
+        reset_btn = Button(
+            text='Reset Game',
+            font_size='16sp'
+        )
+        reset_btn.bind(on_press=self.reset_game)
+        controls.add_widget(reset_btn)
+        
+        root.add_widget(controls)
+        
+        return root
+    
+    def reset_game(self, instance):
+        """Reset the game"""
+        self.game_grid.selected_unit = None
+        self.game_grid.turn = 1
+        self.game_grid.units = [
+            [0, 0, 3, 0], [1, 0, 2, 0], [2, 0, 2, 0],  # Player units
+            [3, 5, 3, 1], [4, 5, 2, 1], [5, 5, 2, 1]   # Enemy units
+        ]
+        self.game_grid.update_display()
 
 if __name__ == '__main__':
-    main()
+    SuperTuxKartMobileApp().run()

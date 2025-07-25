@@ -35,13 +35,13 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install buildozer cython
+        pip install buildozer cython kivy
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 33
-        build-tools: 33.0.2
+        api-level: 30
+        build-tools: 30.0.3
         ndk-version: 25.2.9519653
 
     - name: Set up Java 11
@@ -62,7 +62,7 @@ jobs:
         yes | sdkmanager --licenses
         
         # Install additional build-tools versions that buildozer might need
-        sdkmanager "build-tools;33.0.2" "platforms;android-33"
+        sdkmanager "build-tools;30.0.3" "platforms;android-30"
         
         # Accept licenses again after installation
         yes | sdkmanager --licenses
@@ -145,8 +145,8 @@ jobs:
         sed -i "s|android.ant_path = .*|android.ant_path = .buildozer/android/platform/apache-ant-1.9.4|g" buildozer.spec
         
         # Set environment variables that buildozer checks
-        export ANDROIDAPI="33"
-        export ANDROIDMINAPI="23"
+        export ANDROIDAPI="30"
+        export ANDROIDMINAPI="21"
         export ANDROIDSDKROOT="$ANDROID_SDK_ROOT"
         export ANDROIDNDKROOT="$ANDROID_NDK_HOME"
         
