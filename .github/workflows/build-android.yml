@@ -199,6 +199,9 @@ jobs:
         export ANDROID_SDK_ROOT="$(pwd)/.buildozer/android/platform/android-sdk"
         export ANDROID_NDK_HOME="$(pwd)/.buildozer/android/platform/android-ndk-r23b"
         
+        # CRITICAL: Force buildozer to use project directory instead of ~/.buildozer
+        export BUILDOZER_HOME="$(pwd)"
+        
         # Show environment for debugging
         echo "Build environment:"
         echo "JAVA_HOME: $JAVA_HOME"
@@ -207,6 +210,13 @@ jobs:
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"  
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
         echo "ANDROIDSDKROOT: $ANDROIDSDKROOT"
+        echo "BUILDOZER_HOME: $BUILDOZER_HOME"
+        
+        # Verify buildozer will find our SDK
+        echo "Verifying buildozer paths:"
+        echo "Project .buildozer exists: $(ls -la .buildozer/android/platform/android-sdk/build-tools/ | wc -l) items"
+        echo "Home .buildozer exists: $(ls -la ~/.buildozer/ 2>/dev/null | wc -l || echo 0) items"
+        echo "Current directory: $(pwd)"
         
         # Show updated buildozer.spec paths
         echo "Buildozer SDK paths:"
