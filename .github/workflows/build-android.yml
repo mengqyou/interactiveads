@@ -146,7 +146,7 @@ jobs:
         
         # Set environment variables that buildozer checks
         export ANDROIDAPI="34"
-        export ANDROIDMINAPI="21"
+        export ANDROIDMINAPI="23"
         export ANDROIDSDKROOT="$ANDROID_SDK_ROOT"
         export ANDROIDNDKROOT="$ANDROID_NDK_HOME"
         
