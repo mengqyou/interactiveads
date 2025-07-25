@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-SuperTuxKart Mobile Web - Flask Web App for Android WebView
-Simplified web-based version of the tactical mini-game
+SuperTuxKart Mobile Web - Simple HTTP Server for Android WebView
+Simplified web-based version using only Python standard library
 """
 
-from flask import Flask, render_template_string, jsonify, request
+import http.server
+import socketserver
 import json
 import random
-
-app = Flask(__name__)
+import urllib.parse
+import os
 
 # Simple game state
 game_state = {
@@ -29,8 +30,7 @@ game_state = {
     "winner": None
 }
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html>
 <head>
     <title>SuperTuxKart Mobile</title>
@@ -103,37 +103,18 @@ HTML_TEMPLATE = """
     <div class="game-container">
         <div class="info">
             <h2>🏎️ SuperTuxKart Mobile</h2>
-            <div>Turn: {{ game.turn }}/{{ game.max_turns }}</div>
+            <div>Turn: {turn}/{max_turns}</div>
             <div class="unit-info">
-                Player Units: {{ player_count }} | Enemy Units: {{ enemy_count }}
+                Player Units: {player_count} | Enemy Units: {enemy_count}
             </div>
         </div>
         
         <div class="game-board" id="gameBoard">
-            {% for row in range(6) %}
-                {% for col in range(6) %}
-                    {% set cell_unit = get_unit_at(col, row) %}
-                    <div class="cell {{ get_cell_class(col, row, cell_unit) }}" 
-                         data-x="{{ col }}" data-y="{{ row }}" 
-                         onclick="cellClick({{ col }}, {{ row }})">
-                        {% if cell_unit %}
-                            {{ get_unit_symbol(cell_unit) }}
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            {% endfor %}
+            {board_html}
         </div>
         
         <div class="controls">
-            {% if game.game_over %}
-                <div style="font-size: 20px; margin: 10px;">
-                    🎉 {{ game.winner }} Wins! 🎉
-                </div>
-                <button onclick="resetGame()">New Game</button>
-            {% else %}
-                <button onclick="endTurn()">End Turn</button>
-                <button onclick="resetGame()">Reset Game</button>
-            {% endif %}
+            {controls_html}
         </div>
         
         <div class="info">
@@ -144,36 +125,23 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
-        function cellClick(x, y) {
-            fetch('/action', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'cell_click', x: x, y: y})
-            }).then(response => response.json())
-              .then(data => location.reload());
-        }
+        function cellClick(x, y) {{
+            fetch('/action?action=cell_click&x=' + x + '&y=' + y)
+                .then(() => location.reload());
+        }}
         
-        function endTurn() {
-            fetch('/action', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'end_turn'})
-            }).then(response => response.json())
-              .then(data => location.reload());
-        }
+        function endTurn() {{
+            fetch('/action?action=end_turn')
+                .then(() => location.reload());
+        }}
         
-        function resetGame() {
-            fetch('/action', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'reset'})
-            }).then(response => response.json())
-              .then(data => location.reload());
-        }
+        function resetGame() {{
+            fetch('/action?action=reset')
+                .then(() => location.reload());
+        }}
     </script>
 </body>
-</html>
-"""
+</html>"""
 
 def get_unit_at(x, y):
     """Get unit at specific coordinates"""
@@ -213,27 +181,35 @@ def get_unit_symbol(unit):
     else:
         return "👤" if unit in game_state["player_units"] else "💀"
 
-@app.route('/')
-def index():
-    player_count = len([u for u in game_state["player_units"] if u["hp"] > 0])
-    enemy_count = len([u for u in game_state["enemy_units"] if u["hp"] > 0])
-    
-    return render_template_string(HTML_TEMPLATE, 
-                                game=game_state,
-                                player_count=player_count,
-                                enemy_count=enemy_count,
-                                get_unit_at=get_unit_at,
-                                get_cell_class=get_cell_class,
-                                get_unit_symbol=get_unit_symbol,
-                                range=range)
+def generate_board_html():
+    """Generate the game board HTML"""
+    html = ""
+    for row in range(6):
+        for col in range(6):
+            unit = get_unit_at(col, row)
+            cell_class = get_cell_class(col, row, unit)
+            symbol = get_unit_symbol(unit) if unit else ""
+            html += f'<div class="cell {cell_class}" onclick="cellClick({col}, {row})">{symbol}</div>'
+    return html
 
-@app.route('/action', methods=['POST'])
-def handle_action():
-    data = request.json
-    action = data.get('action')
-    
-    if action == 'cell_click':
-        x, y = data['x'], data['y']
+def generate_controls_html():
+    """Generate the controls HTML"""
+    if game_state["game_over"]:
+        return f'''
+            <div style="font-size: 20px; margin: 10px;">
+                🎉 {game_state["winner"]} Wins! 🎉
+            </div>
+            <button onclick="resetGame()">New Game</button>
+        '''
+    else:
+        return '''
+            <button onclick="endTurn()">End Turn</button>
+            <button onclick="resetGame()">Reset Game</button>
+        '''
+
+def handle_action(action, x=None, y=None):
+    """Handle game actions"""
+    if action == 'cell_click' and x is not None and y is not None:
         unit = get_unit_at(x, y)
         
         # Select player unit
@@ -316,8 +292,54 @@ def handle_action():
             {"id": 5, "type": "soldier", "x": 4, "y": 5, "hp": 2, "selected": False},
             {"id": 6, "type": "soldier", "x": 5, "y": 5, "hp": 2, "selected": False}
         ]
-    
-    return jsonify({"status": "success"})
+
+class GameHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/':
+            # Serve main game page
+            player_count = len([u for u in game_state["player_units"] if u["hp"] > 0])
+            enemy_count = len([u for u in game_state["enemy_units"] if u["hp"] > 0])
+            
+            html = HTML_TEMPLATE.format(
+                turn=game_state["turn"],
+                max_turns=game_state["max_turns"],
+                player_count=player_count,
+                enemy_count=enemy_count,
+                board_html=generate_board_html(),
+                controls_html=generate_controls_html()
+            )
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(html.encode())
+            
+        elif self.path.startswith('/action'):
+            # Handle game actions
+            parsed = urllib.parse.urlparse(self.path)
+            params = urllib.parse.parse_qs(parsed.query)
+            
+            action = params.get('action', [None])[0]
+            x = int(params.get('x', [0])[0]) if params.get('x') else None
+            y = int(params.get('y', [0])[0]) if params.get('y') else None
+            
+            handle_action(action, x, y)
+            
+            # Return simple response
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'OK')
+        else:
+            # Default 404
+            self.send_response(404)
+            self.end_headers()
+
+def main():
+    PORT = 5000
+    with socketserver.TCPServer(("0.0.0.0", PORT), GameHandler) as httpd:
+        print(f"SuperTuxKart Mobile server running on port {PORT}")
+        httpd.serve_forever()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    main()

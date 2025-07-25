@@ -37,7 +37,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,flask
+requirements = python3
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -336,7 +336,7 @@ android.allow_backup = True
 p4a.bootstrap = webview
 
 # (int) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
-#p4a.port =
+p4a.port = 5000
 
 # Control passing the --use-setup-py vs --ignore-setup-py to p4a
 # "in the future" --use-setup-py is going to be the default behaviour in p4a, right now it is not
