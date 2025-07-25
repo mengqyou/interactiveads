@@ -3,73 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏎️ SuperTuxKart Mobile - Interactive Ad Demo</title>
+    <title>🏎️ SuperTuxKart Mobile - Interactive Racing</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            text-align: center;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            overflow-x: hidden;
         }
         
         .game-container {
             max-width: 400px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
         }
         
         h1 {
-            font-size: 2.5em;
-            margin: 0 0 10px 0;
+            font-size: 2em;
+            margin: 10px 0;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         
-        .subtitle {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            opacity: 0.9;
+        .race-track {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to bottom, #4a4a4a 0%, #2a2a2a 50%, #4a4a4a 100%);
+            border: 3px solid #fff;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
         }
         
-        .status {
-            font-size: 1.1em;
-            margin: 20px 0;
-            min-height: 50px;
+        .track-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 20px,
+                #ffff00 20px,
+                #ffff00 25px,
+                transparent 25px,
+                transparent 45px
+            );
+            animation: roadScroll 1s linear infinite;
+        }
+        
+        @keyframes roadScroll {
+            0% { transform: translateY(-45px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .car {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            transition: left 0.3s ease;
+            z-index: 10;
+        }
+        
+        .player-car {
+            background: #ff4444;
+            border-radius: 10px 10px 5px 5px;
+            box-shadow: 0 2px 10px rgba(255, 68, 68, 0.5);
+        }
+        
+        .player-car::before {
+            content: '🏎️';
+            position: absolute;
+            font-size: 35px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .opponent-car {
+            background: #4444ff;
+            border-radius: 10px 10px 5px 5px;
+            box-shadow: 0 2px 10px rgba(68, 68, 255, 0.5);
+            top: 20px;
+            animation: opponentMove 3s ease-in-out infinite;
+        }
+        
+        .opponent-car::before {
+            content: '🚗';
+            position: absolute;
+            font-size: 35px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        @keyframes opponentMove {
+            0%, 100% { left: 20%; }
+            50% { left: 70%; }
+        }
+        
+        .controls {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.2);
+            justify-content: space-between;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            flex: 1;
+            padding: 20px;
+            font-size: 24px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+        
+        .game-info {
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
             padding: 15px;
+            margin: 20px 0;
         }
         
-        button {
-            font-size: 1.2em;
+        .speed-meter {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        
+        .start-btn, .restart-btn {
             padding: 15px 30px;
-            margin: 10px;
+            font-size: 1.2em;
             border: none;
-            border-radius: 50px;
+            border-radius: 25px;
             cursor: pointer;
+            margin: 10px;
             transition: all 0.3s ease;
             font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
         .start-btn {
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            font-size: 1.4em;
-            padding: 20px 40px;
         }
         
         .start-btn:hover {
@@ -77,64 +166,68 @@
             box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
         
-        .start-btn:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
         .restart-btn {
             background: linear-gradient(45deg, #FF6B6B, #ee5a24);
             color: white;
         }
         
-        .restart-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        .position-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
         }
         
-        .instructions {
-            font-size: 0.9em;
-            margin-top: 30px;
-            opacity: 0.8;
-            line-height: 1.6;
+        .powerup {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: gold;
+            border-radius: 50%;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: powerupFloat 2s ease-in-out infinite;
         }
         
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            margin: 20px 0;
-            overflow: hidden;
+        @keyframes powerupFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
         
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #8BC34A);
-            width: 0%;
-            transition: width 0.1s ease;
-            border-radius: 4px;
-        }
-        
-        .demo-note {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 0.9em;
-            border-left: 4px solid #4CAF50;
+        .race-finished {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.5em;
+            z-index: 100;
         }
         
         @media (max-width: 480px) {
             .game-container {
-                margin: 10px;
-                padding: 20px;
+                padding: 10px;
             }
             
-            h1 {
-                font-size: 2em;
+            .race-track {
+                height: 250px;
+            }
+            
+            .controls {
+                gap: 5px;
+            }
+            
+            .control-btn {
+                padding: 15px;
+                font-size: 20px;
             }
         }
     </style>
@@ -142,132 +235,284 @@
 <body>
     <div class="game-container">
         <h1>🏎️ SuperTuxKart Mobile</h1>
-        <div class="subtitle">Quick Skirmish</div>
         
-        <div class="status" id="status">
-            Tap START to begin your racing adventure!
+        <div class="race-track" id="raceTrack">
+            <div class="track-lines" id="trackLines"></div>
+            <div class="car player-car" id="playerCar"></div>
+            <div class="car opponent-car" id="opponentCar"></div>
+            <div class="position-indicator" id="positionIndicator">Position: 2/2</div>
         </div>
         
-        <div class="progress-bar" id="progressContainer" style="display: none;">
-            <div class="progress-fill" id="progressFill"></div>
+        <div class="controls" id="gameControls" style="display: none;">
+            <button class="control-btn" id="leftBtn">⬅️<br>LEFT</button>
+            <button class="control-btn" id="boostBtn">⚡<br>BOOST</button>
+            <button class="control-btn" id="rightBtn">➡️<br>RIGHT</button>
         </div>
         
-        <button class="start-btn" id="startBtn" onclick="startRace()">
-            🏁 START RACE
-        </button>
-        
-        <button class="restart-btn" id="restartBtn" onclick="restartGame()">
-            🔄 RESTART
-        </button>
-        
-        <div class="instructions">
-            <strong>Interactive Ad Demo</strong><br>
-            Mini racing game based on SuperTuxKart.<br>
-            Optimized for mobile play!
+        <div class="game-info" id="gameInfo">
+            <div class="speed-meter">Speed: <span id="speedDisplay">0</span> mph</div>
+            <div id="statusText">Tap START RACE to begin your adventure!</div>
         </div>
         
-        <div class="demo-note">
-            <strong>🤖 AI-Generated Interactive Ad</strong><br>
-            This mini-game was automatically generated from the full SuperTuxKart game using AI analysis. 
-            Perfect for 5-8 minute engagement sessions!
+        <button class="start-btn" id="startBtn" onclick="startRace()">🏁 START RACE</button>
+        <button class="restart-btn" id="restartBtn" onclick="restartGame()">🔄 RESTART</button>
+        
+        <div style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
+            <strong>🎮 Controls:</strong> Use LEFT/RIGHT to steer, BOOST for speed!<br>
+            <strong>🏆 Goal:</strong> Overtake the blue car to win!
         </div>
     </div>
 
     <script>
-        let raceInProgress = false;
+        let gameActive = false;
         let raceTimer = null;
-        let progressTimer = null;
+        let playerPosition = 50; // percentage from left
+        let speed = 0;
+        let maxSpeed = 120;
+        let boostCooldown = false;
+        let raceTime = 0;
+        let opponentPosition = 30;
+        let playerProgress = 0;
+        let opponentProgress = 0;
         
-        const status = document.getElementById('status');
+        const playerCar = document.getElementById('playerCar');
+        const opponentCar = document.getElementById('opponentCar');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const statusText = document.getElementById('statusText');
         const startBtn = document.getElementById('startBtn');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressFill = document.getElementById('progressFill');
+        const gameControls = document.getElementById('gameControls');
+        const positionIndicator = document.getElementById('positionIndicator');
+        const trackLines = document.getElementById('trackLines');
         
-        const raceResults = [
-            "🥇 Victory! You won the race!",
-            "🥈 Second place! Great racing!",
-            "🥉 Third place! Not bad!",
-            "🏁 You finished the race!",
-            "🏎️ Fantastic racing skills!",
-            "⚡ Lightning fast finish!"
-        ];
+        // Touch/Click controls
+        document.getElementById('leftBtn').addEventListener('mousedown', () => steer(-1));
+        document.getElementById('rightBtn').addEventListener('mousedown', () => steer(1));
+        document.getElementById('boostBtn').addEventListener('click', boost);
         
-        function startRace() {
-            if (raceInProgress) return;
+        // Mobile touch events
+        document.getElementById('leftBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            steer(-1);
+        });
+        document.getElementById('rightBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            steer(1);
+        });
+        document.getElementById('boostBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            boost();
+        });
+        
+        // Keyboard controls for desktop
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
             
-            raceInProgress = true;
-            startBtn.disabled = true;
-            startBtn.textContent = '🏁 RACING...';
-            status.textContent = 'Racing in progress... Push the limits!';
+            switch(e.key) {
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    steer(-1);
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    steer(1);
+                    break;
+                case ' ':
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    e.preventDefault();
+                    boost();
+                    break;
+            }
+        });
+        
+        function steer(direction) {
+            if (!gameActive) return;
             
-            // Show progress bar
-            progressContainer.style.display = 'block';
-            progressFill.style.width = '0%';
+            playerPosition += direction * 15;
+            playerPosition = Math.max(10, Math.min(90, playerPosition));
+            playerCar.style.left = playerPosition + '%';
             
-            // Animate progress bar over 5 seconds
-            let progress = 0;
-            progressTimer = setInterval(() => {
-                progress += 2;
-                progressFill.style.width = progress + '%';
-                
-                if (progress >= 100) {
-                    clearInterval(progressTimer);
-                }
-            }, 100);
-            
-            // Finish race after 5 seconds
-            raceTimer = setTimeout(finishRace, 5000);
+            // Add visual feedback
+            playerCar.style.transform = `translateX(-50%) rotate(${direction * 5}deg)`;
+            setTimeout(() => {
+                playerCar.style.transform = 'translateX(-50%) rotate(0deg)';
+            }, 200);
         }
         
-        function finishRace() {
-            raceInProgress = false;
+        function boost() {
+            if (!gameActive || boostCooldown) return;
+            
+            speed = Math.min(maxSpeed, speed + 30);
+            boostCooldown = true;
+            
+            // Visual boost effect
+            playerCar.style.boxShadow = '0 0 20px #ffff00, 0 2px 10px rgba(255, 68, 68, 0.5)';
+            document.getElementById('boostBtn').style.background = 'rgba(255, 255, 0, 0.5)';
+            
+            setTimeout(() => {
+                playerCar.style.boxShadow = '0 2px 10px rgba(255, 68, 68, 0.5)';
+                document.getElementById('boostBtn').style.background = 'rgba(255, 255, 255, 0.2)';
+                boostCooldown = false;
+            }, 1000);
+        }
+        
+        function startRace() {
+            if (gameActive) return;
+            
+            gameActive = true;
+            raceTime = 0;
+            speed = 60;
+            playerProgress = 0;
+            opponentProgress = 0;
+            playerPosition = 50;
+            
+            startBtn.disabled = true;
+            startBtn.textContent = '🏁 RACING...';
+            gameControls.style.display = 'flex';
+            statusText.textContent = 'Race in progress! Overtake the blue car!';
+            
+            // Animate track
+            trackLines.style.animationDuration = '0.5s';
+            
+            // Start game loop
+            raceTimer = setInterval(gameLoop, 100);
+            
+            // End race after 8 seconds
+            setTimeout(endRace, 8000);
+        }
+        
+        function gameLoop() {
+            if (!gameActive) return;
+            
+            raceTime += 0.1;
+            
+            // Update speed (gradual slowdown)
+            if (speed > 40) {
+                speed -= 0.5;
+            }
+            speedDisplay.textContent = Math.round(speed);
+            
+            // Update track animation speed based on player speed
+            const animationSpeed = Math.max(0.2, 1 - (speed / 100));
+            trackLines.style.animationDuration = animationSpeed + 's';
+            
+            // Update progress
+            playerProgress += speed / 100;
+            opponentProgress += (50 + Math.sin(raceTime) * 10) / 100;
+            
+            // Update opponent car movement
+            const opponentX = 30 + Math.sin(raceTime * 2) * 40;
+            opponentCar.style.left = opponentX + '%';
+            
+            // Update position indicator
+            if (playerProgress > opponentProgress) {
+                positionIndicator.textContent = 'Position: 1/2 🥇';
+                positionIndicator.style.background = 'rgba(0, 150, 0, 0.8)';
+            } else {
+                positionIndicator.textContent = 'Position: 2/2';
+                positionIndicator.style.background = 'rgba(150, 0, 0, 0.8)';
+            }
+            
+            // Random powerups
+            if (Math.random() < 0.02) {
+                createPowerup();
+            }
+        }
+        
+        function createPowerup() {
+            const powerup = document.createElement('div');
+            powerup.className = 'powerup';
+            powerup.textContent = '⚡';
+            powerup.style.left = Math.random() * 70 + 15 + '%';
+            powerup.style.top = Math.random() * 200 + 50 + 'px';
+            
+            document.getElementById('raceTrack').appendChild(powerup);
+            
+            // Remove powerup after 3 seconds
+            setTimeout(() => {
+                if (powerup.parentNode) {
+                    powerup.parentNode.removeChild(powerup);
+                }
+            }, 3000);
+        }
+        
+        function endRace() {
+            gameActive = false;
+            clearInterval(raceTimer);
+            
             startBtn.disabled = false;
             startBtn.textContent = '🏁 RACE AGAIN';
+            gameControls.style.display = 'none';
             
-            // Hide progress bar
-            progressContainer.style.display = 'none';
+            // Stop track animation
+            trackLines.style.animationDuration = '1s';
             
-            // Show random result
-            const result = raceResults[Math.floor(Math.random() * raceResults.length)];
-            status.textContent = result;
+            // Determine winner
+            let resultText;
+            if (playerProgress > opponentProgress) {
+                resultText = '🥇 Victory! You won the race!';
+                statusText.style.background = 'linear-gradient(45deg, #4CAF50, #8BC34A)';
+            } else {
+                resultText = '🥈 Good race! Try again to win!';
+                statusText.style.background = 'linear-gradient(45deg, #FF9800, #FF5722)';
+            }
             
-            // Add some visual flair
-            status.style.background = 'linear-gradient(45deg, #4CAF50, #8BC34A)';
+            statusText.textContent = resultText;
+            
+            // Reset styling after 3 seconds
             setTimeout(() => {
-                status.style.background = 'rgba(0, 0, 0, 0.2)';
-            }, 2000);
+                statusText.style.background = 'transparent';
+            }, 3000);
         }
         
         function restartGame() {
-            // Clear any running timers
+            gameActive = false;
             if (raceTimer) {
-                clearTimeout(raceTimer);
-            }
-            if (progressTimer) {
-                clearInterval(progressTimer);
+                clearInterval(raceTimer);
             }
             
-            raceInProgress = false;
+            // Reset all values
+            raceTime = 0;
+            speed = 0;
+            playerProgress = 0;
+            opponentProgress = 0;
+            playerPosition = 50;
+            
+            // Reset UI
             startBtn.disabled = false;
             startBtn.textContent = '🏁 START RACE';
-            status.textContent = 'Tap START to begin your racing adventure!';
-            progressContainer.style.display = 'none';
-            status.style.background = 'rgba(0, 0, 0, 0.2)';
+            gameControls.style.display = 'none';
+            statusText.textContent = 'Tap START RACE to begin your adventure!';
+            statusText.style.background = 'transparent';
+            speedDisplay.textContent = '0';
+            positionIndicator.textContent = 'Position: 2/2';
+            positionIndicator.style.background = 'rgba(0, 0, 0, 0.7)';
+            
+            // Reset car positions
+            playerCar.style.left = '50%';
+            playerCar.style.transform = 'translateX(-50%)';
+            trackLines.style.animationDuration = '1s';
+            
+            // Remove any powerups
+            const powerups = document.querySelectorAll('.powerup');
+            powerups.forEach(powerup => powerup.remove());
         }
         
-        // Add some mobile touch feedback
-        document.addEventListener('touchstart', function() {}, {passive: true});
+        // Prevent context menu on long press (mobile)
+        document.addEventListener('contextmenu', e => e.preventDefault());
         
-        // Track engagement for demo purposes
-        let startTime = Date.now();
-        let raceCount = 0;
-        
-        const originalStartRace = startRace;
-        startRace = function() {
-            raceCount++;
-            console.log(`Race #${raceCount} started. Time on page: ${Math.round((Date.now() - startTime) / 1000)}s`);
-            originalStartRace();
-        };
+        // Prevent zoom on double tap (mobile)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
     </script>
 </body>
 </html>
