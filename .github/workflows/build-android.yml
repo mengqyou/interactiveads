@@ -78,13 +78,24 @@ jobs:
         # Create buildozer cache directories and completely populate them
         mkdir -p .buildozer/android/platform
         
-        # Copy (don't link) SDK to buildozer location to avoid path issues
-        cp -r $ANDROID_SDK_ROOT .buildozer/android/platform/android-sdk
+        # Create the exact directory structure buildozer expects
+        mkdir -p .buildozer/android/platform/android-sdk
         
-        # Ensure build-tools are properly located where buildozer expects them
-        echo "Copying build-tools to correct location..."
-        mkdir -p .buildozer/android/platform/android-sdk/build-tools
-        cp -r $ANDROID_SDK_ROOT/build-tools/* .buildozer/android/platform/android-sdk/build-tools/
+        # Copy SDK components individually to ensure proper structure
+        echo "Setting up Android SDK structure for buildozer..."
+        cp -r $ANDROID_SDK_ROOT/platforms .buildozer/android/platform/android-sdk/
+        cp -r $ANDROID_SDK_ROOT/cmdline-tools .buildozer/android/platform/android-sdk/
+        
+        # Copy build-tools with explicit directory structure
+        echo "Copying build-tools to exact buildozer location..."
+        cp -r $ANDROID_SDK_ROOT/build-tools .buildozer/android/platform/android-sdk/
+        
+        # Verify the structure matches what buildozer expects
+        echo "Verifying SDK structure for buildozer:"
+        echo "SDK root:" 
+        ls -la .buildozer/android/platform/android-sdk/
+        echo "Build-tools exists:"
+        ls -la .buildozer/android/platform/android-sdk/build-tools/
         
         # Verify build-tools are in the right place
         echo "Build-tools verification:"
@@ -99,6 +110,11 @@ jobs:
         for dir in .buildozer/android/platform/android-sdk/build-tools/*/; do
           echo "=== $dir ==="
           ls -la "$dir" | head -10
+          # Test if aidl is executable
+          if [ -f "$dir/aidl" ]; then
+            echo "Found aidl at: $dir/aidl"
+            "$dir/aidl" --help || echo "aidl exists but not executable"
+          fi
         done
         
         # Find the correct NDK 23 path
@@ -178,8 +194,10 @@ jobs:
         # Set environment variables that buildozer checks
         export ANDROIDAPI="28"
         export ANDROIDMINAPI="21"
-        export ANDROIDSDKROOT="$ANDROID_SDK_ROOT"
-        export ANDROIDNDKROOT="$ANDROID_NDK_HOME"
+        export ANDROIDSDKROOT="$(pwd)/.buildozer/android/platform/android-sdk"
+        export ANDROIDNDKROOT="$(pwd)/.buildozer/android/platform/android-ndk-r23b"
+        export ANDROID_SDK_ROOT="$(pwd)/.buildozer/android/platform/android-sdk"
+        export ANDROID_NDK_HOME="$(pwd)/.buildozer/android/platform/android-ndk-r23b"
         
         # Show environment for debugging
         echo "Build environment:"
