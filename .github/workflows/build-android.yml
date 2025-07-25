@@ -64,6 +64,9 @@ jobs:
         # Install additional build-tools versions that buildozer might need
         sdkmanager "build-tools;28.0.3" "platforms;android-28"
         
+        # Also accept licenses for any other build-tools that might be requested
+        echo "y" | sdkmanager "build-tools;36.0.0" || echo "build-tools 36 not available or failed"
+        
         # Accept licenses again after installation
         yes | sdkmanager --licenses
         
@@ -77,6 +80,26 @@ jobs:
         
         # Copy (don't link) SDK to buildozer location to avoid path issues
         cp -r $ANDROID_SDK_ROOT .buildozer/android/platform/android-sdk
+        
+        # Ensure build-tools are properly located where buildozer expects them
+        echo "Copying build-tools to correct location..."
+        mkdir -p .buildozer/android/platform/android-sdk/build-tools
+        cp -r $ANDROID_SDK_ROOT/build-tools/* .buildozer/android/platform/android-sdk/build-tools/
+        
+        # Verify build-tools are in the right place
+        echo "Build-tools verification:"
+        ls -la .buildozer/android/platform/android-sdk/build-tools/
+        
+        # Look for aidl specifically
+        echo "Searching for aidl binary:"
+        find .buildozer/android/platform/android-sdk/build-tools -name "aidl" -type f || echo "aidl not found"
+        
+        # Show what buildozer will see
+        echo "Contents of each build-tools version:"
+        for dir in .buildozer/android/platform/android-sdk/build-tools/*/; do
+          echo "=== $dir ==="
+          ls -la "$dir" | head -10
+        done
         
         # Find the correct NDK 23 path
         NDK23_PATH=$(find $ANDROID_SDK_ROOT/ndk -name "*23*" | head -1)
