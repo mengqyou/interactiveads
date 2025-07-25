@@ -80,3 +80,6 @@ logs/
 *.jpeg
 !assets/icons/*.png
 !docs/images/*.png
+
+# External repositories
+stk-code/

@@ -40,8 +40,8 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 30
-        build-tools: 30.0.3
+        api-level: 34
+        build-tools: 34.0.0
         ndk-version: 25.2.9519653
 
     - name: Set up Java 11
@@ -62,7 +62,7 @@ jobs:
         yes | sdkmanager --licenses
         
         # Install additional build-tools versions that buildozer might need
-        sdkmanager "build-tools;36.0.0" "build-tools;33.0.2" "build-tools;34.0.0"
+        sdkmanager "build-tools;34.0.0" "build-tools;33.0.2" "platforms;android-34"
         
         # Accept licenses again after installation
         yes | sdkmanager --licenses
@@ -145,7 +145,7 @@ jobs:
         sed -i "s|android.ant_path = .*|android.ant_path = .buildozer/android/platform/apache-ant-1.9.4|g" buildozer.spec
         
         # Set environment variables that buildozer checks
-        export ANDROIDAPI="30"
+        export ANDROIDAPI="34"
         export ANDROIDMINAPI="21"
         export ANDROIDSDKROOT="$ANDROID_SDK_ROOT"
         export ANDROIDNDKROOT="$ANDROID_NDK_HOME"
