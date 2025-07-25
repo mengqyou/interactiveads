@@ -55,6 +55,8 @@ python scripts/build_android.py
 
 ## 🎮 How to Play the Generated Game
 
+**🌐 Play Online**: https://mengqyou.github.io/interactiveads/web_game.html
+
 ### Quick Start
 1. **Run the game**: `python main.py` (mobile version) or `python scripts/run_mini_game.py` (desktop)
 2. **Select units**: Click/tap your blue units to select them
