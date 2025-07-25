@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperTuxKart: Power Rush - Authentic Mini-Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Arial', sans-serif;
+            overflow-x: hidden;
+            color: white;
+        }
+        
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stk-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 10px;
+            background: url('assets/stk_assets/icons/supertuxkart_128.png') center/contain no-repeat;
+        }
+        
+        .title {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin: 10px 0;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .race-track {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, 
+                #606060 0%, #404040 20%, #606060 50%, #404040 80%, #606060 100%);
+            border: 4px solid #333;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.7);
+        }
+        
+        /* Authentic STK track lines */
+        .track-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(to bottom,
+                    transparent 0px,
+                    transparent 30px,
+                    #FFD700 30px,
+                    #FFD700 35px,
+                    transparent 35px,
+                    transparent 65px
+                );
+            animation: roadScroll 0.8s linear infinite;
+        }
+        
+        @keyframes roadScroll {
+            0% { transform: translateY(-65px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .kart {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: left 0.3s ease, transform 0.2s ease;
+            z-index: 10;
+        }
+        
+        .kart.player {
+            background: url('assets/stk_assets/powerups/random_kart.png') center/contain no-repeat;
+        }
+        
+        .kart.opponent {
+            background: url('assets/stk_assets/powerups/random_kart.png') center/contain no-repeat;
+            top: 50px;
+            animation: opponentWeave 4s ease-in-out infinite;
+            filter: hue-rotate(120deg);
+        }
+        
+        @keyframes opponentWeave {
+            0%, 100% { left: 25%; }
+            50% { left: 65%; }
+        }
+        
+        .powerup {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid #FFD700;
+            background: rgba(255, 215, 0, 0.2);
+            animation: powerupFloat 2s ease-in-out infinite, powerupSpin 3s linear infinite;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .powerup:hover {
+            transform: scale(1.2);
+        }
+        
+        .powerup img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        @keyframes powerupFloat {
+            0%, 100% { transform: translateY(0px) rotateY(0deg); }
+            50% { transform: translateY(-15px) rotateY(180deg); }
+        }
+        
+        @keyframes powerupSpin {
+            0% { transform: rotateZ(0deg); }
+            100% { transform: rotateZ(360deg); }
+        }
+        
+        .ui-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #FFD700;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stat {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .control-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .control-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .boost-btn {
+            background: linear-gradient(135deg, #FF6B6B, #ee5a24);
+        }
+        
+        .start-btn {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+            font-size: 1.3em;
+            padding: 25px;
+        }
+        
+        .powerup-inventory {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 10px;
+            border: 2px solid #FFD700;
+        }
+        
+        .inventory-slot {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .inventory-slot.filled {
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        
+        .inventory-slot img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+        
+        .race-status {
+            text-align: center;
+            font-size: 1.4em;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #FFD700;
+        }
+        
+        .position-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #FFD700;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-weight: bold;
+            border: 2px solid #FFD700;
+        }
+        
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 10px;
+            }
+            
+            .race-track {
+                height: 300px;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .control-btn {
+                padding: 15px;
+                font-size: 1em;
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="stk-logo"></div>
+            <h1 class="title">POWER RUSH</h1>
+            <p class="subtitle">Authentic SuperTuxKart Mini-Game Experience</p>
+        </div>
+        
+        <div class="ui-panel">
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-value" id="speed">0</div>
+                    <div class="stat-label">Speed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="position">2/2</div>
+                    <div class="stat-label">Position</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="powerups">0</div>
+                    <div class="stat-label">Items</div>
+                </div>
+            </div>
+            
+            <div class="powerup-inventory" id="inventory">
+                <div class="inventory-slot"></div>
+                <div class="inventory-slot"></div>
+                <div class="inventory-slot"></div>
+            </div>
+        </div>
+        
+        <div class="race-track" id="raceTrack">
+            <div class="track-lines" id="trackLines"></div>
+            <div class="kart player" id="playerKart"></div>
+            <div class="kart opponent" id="opponentKart"></div>
+            <div class="position-indicator" id="positionIndicator">Position: 2/2</div>
+        </div>
+        
+        <div class="race-status" id="status">
+            Ready to experience authentic SuperTuxKart racing!
+        </div>
+        
+        <div class="controls" id="gameControls" style="display: none;">
+            <button class="control-btn" id="leftBtn">⬅ STEER</button>
+            <button class="control-btn boost-btn" id="boostBtn">⚡ NITRO</button>
+            <button class="control-btn" id="rightBtn">➡ STEER</button>
+        </div>
+        
+        <button class="control-btn start-btn" id="startBtn" onclick="startRace()">
+            🏁 START POWER RUSH
+        </button>
+    </div>
+
+    <script>
+        // Real SuperTuxKart powerup types from powerup.xml analysis
+        const STK_POWERUPS = [
+            { name: 'bowling', icon: 'bowling-icon.png', effect: 'Bowling Ball Attack!' },
+            { name: 'cake', icon: 'cake-icon.png', effect: 'Cake Bomb!' },
+            { name: 'zipper', icon: 'zipper_collect.png', effect: 'Speed Boost!' },
+            { name: 'plunger', icon: 'plunger-icon.png', effect: 'Plunger Shot!' },
+            { name: 'rubber-ball', icon: 'rubber_ball-icon.png', effect: 'Rubber Ball Chase!' },
+            { name: 'parachute', icon: 'parachute-icon.png', effect: 'Parachute Deployed!' },
+            { name: 'bubblegum', icon: 'bubblegum-icon.png', effect: 'Bubblegum Trap!' },
+            { name: 'swatter', icon: 'swatter-icon.png', effect: 'Swatter Attack!' }
+        ];
+        
+        let gameActive = false;
+        let gameTimer = null;
+        let playerPosition = 50;
+        let speed = 0;
+        let maxSpeed = 180; // STK-style high speeds
+        let nitroActive = false;
+        let raceTime = 0;
+        let playerProgress = 0;
+        let opponentProgress = 0;
+        let collectedPowerups = [];
+        let activePowerups = [];
+        
+        const elements = {
+            playerKart: document.getElementById('playerKart'),
+            trackLines: document.getElementById('trackLines'),
+            speed: document.getElementById('speed'),
+            position: document.getElementById('position'),
+            powerupsCount: document.getElementById('powerups'),
+            status: document.getElementById('status'),
+            gameControls: document.getElementById('gameControls'),
+            startBtn: document.getElementById('startBtn'),
+            inventory: document.getElementById('inventory'),
+            raceTrack: document.getElementById('raceTrack')
+        };
+        
+        // Real STK-style controls
+        document.getElementById('leftBtn').addEventListener('click', () => steer(-1));
+        document.getElementById('rightBtn').addEventListener('click', () => steer(1));
+        document.getElementById('boostBtn').addEventListener('click', useNitro);
+        
+        // Touch events for mobile
+        ['leftBtn', 'rightBtn', 'boostBtn'].forEach(id => {
+            document.getElementById(id).addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (id === 'leftBtn') steer(-1);
+                else if (id === 'rightBtn') steer(1);
+                else if (id === 'boostBtn') useNitro();
+            });
+        });
+        
+        // Keyboard controls matching STK
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'arrowleft':
+                case 'a':
+                    steer(-1);
+                    break;
+                case 'arrowright':
+                case 'd':
+                    steer(1);
+                    break;
+                case ' ':
+                case 'arrowup':
+                case 'w':
+                    e.preventDefault();
+                    useNitro();
+                    break;
+                case 'arrowdown':
+                case 's':
+                    usePowerup();
+                    break;
+            }
+        });
+        
+        function steer(direction) {
+            if (!gameActive) return;
+            
+            playerPosition += direction * 20;
+            playerPosition = Math.max(15, Math.min(85, playerPosition));
+            elements.playerKart.style.left = playerPosition + '%';
+            
+            // STK-style kart tilt effect
+            elements.playerKart.style.transform = `translateX(-50%) rotateZ(${direction * 8}deg)`;
+            setTimeout(() => {
+                elements.playerKart.style.transform = 'translateX(-50%) rotateZ(0deg)';
+            }, 300);
+            
+            // Speed boost from good steering
+            if (Math.abs(playerPosition - 50) < 20) {
+                speed = Math.min(maxSpeed, speed + 2);
+            }
+        }
+        
+        function useNitro() {
+            if (!gameActive || nitroActive) return;
+            
+            nitroActive = true;
+            speed = Math.min(maxSpeed, speed + 50);
+            
+            // Visual nitro effect
+            elements.playerKart.style.boxShadow = '0 0 30px #00ff00, 0 0 60px #00ff00';
+            elements.trackLines.style.animationDuration = '0.2s';
+            
+            setTimeout(() => {
+                elements.playerKart.style.boxShadow = 'none';
+                elements.trackLines.style.animationDuration = '0.8s';
+                nitroActive = false;
+            }, 2000);
+        }
+        
+        function spawnPowerup() {
+            const powerup = STK_POWERUPS[Math.floor(Math.random() * STK_POWERUPS.length)];
+            const powerupElement = document.createElement('div');
+            powerupElement.className = 'powerup';
+            powerupElement.innerHTML = `<img src="assets/stk_assets/powerups/${powerup.icon}" alt="${powerup.name}">`;
+            powerupElement.style.left = Math.random() * 70 + 15 + '%';
+            powerupElement.style.top = Math.random() * 250 + 100 + 'px';
+            powerupElement.dataset.powerup = JSON.stringify(powerup);
+            
+            powerupElement.addEventListener('click', () => collectPowerup(powerupElement, powerup));
+            
+            elements.raceTrack.appendChild(powerupElement);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (powerupElement.parentNode) {
+                    powerupElement.parentNode.removeChild(powerupElement);
+                }
+            }, 5000);
+        }
+        
+        function collectPowerup(element, powerup) {
+            if (collectedPowerups.length >= 3) return;
+            
+            collectedPowerups.push(powerup);
+            updateInventory();
+            elements.powerupsCount.textContent = collectedPowerups.length;
+            
+            // Collection effect
+            element.style.transform = 'scale(2) rotateZ(720deg)';
+            element.style.opacity = '0';
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                }
+            }, 500);
+            
+            // Speed boost for collection
+            speed = Math.min(maxSpeed, speed + 15);
+        }
+        
+        function updateInventory() {
+            const slots = elements.inventory.children;
+            for (let i = 0; i < slots.length; i++) {
+                const slot = slots[i];
+                if (i < collectedPowerups.length) {
+                    const powerup = collectedPowerups[i];
+                    slot.className = 'inventory-slot filled';
+                    slot.innerHTML = `<img src="assets/stk_assets/powerups/${powerup.icon}" alt="${powerup.name}">`;
+                } else {
+                    slot.className = 'inventory-slot';
+                    slot.innerHTML = '';
+                }
+            }
+        }
+        
+        function usePowerup() {
+            if (collectedPowerups.length === 0) return;
+            
+            const powerup = collectedPowerups.shift();
+            elements.status.textContent = powerup.effect;
+            
+            // Apply powerup effect
+            switch(powerup.name) {
+                case 'zipper':
+                    speed = Math.min(maxSpeed, speed + 40);
+                    break;
+                case 'bowling':
+                case 'cake':
+                case 'rubber-ball':
+                    // Attack opponent (boost player progress)
+                    playerProgress += 5;
+                    break;
+                case 'parachute':
+                    // Slow opponent
+                    opponentProgress -= 2;
+                    break;
+                default:
+                    speed = Math.min(maxSpeed, speed + 20);
+            }
+            
+            updateInventory();
+            elements.powerupsCount.textContent = collectedPowerups.length;
+            
+            setTimeout(() => {
+                if (gameActive) {
+                    elements.status.textContent = 'Race in progress! Collect powerups!';
+                }
+            }, 2000);
+        }
+        
+        function startRace() {
+            if (gameActive) return;
+            
+            gameActive = true;
+            raceTime = 0;
+            speed = 80; // STK starting speed
+            playerProgress = 0;
+            opponentProgress = 0;
+            collectedPowerups = [];
+            
+            elements.startBtn.style.display = 'none';
+            elements.gameControls.style.display = 'grid';
+            elements.status.textContent = 'Race in progress! Collect powerups!';
+            
+            updateInventory();
+            
+            // Start game loop
+            gameTimer = setInterval(gameLoop, 100);
+            
+            // Spawn powerups periodically
+            const powerupTimer = setInterval(() => {
+                if (gameActive && Math.random() < 0.3) {
+                    spawnPowerup();
+                }
+            }, 2000);
+            
+            // End race after 12 seconds
+            setTimeout(() => {
+                endRace();
+                clearInterval(powerupTimer);
+            }, 12000);
+        }
+        
+        function gameLoop() {
+            if (!gameActive) return;
+            
+            raceTime += 0.1;
+            
+            // Update speed (gradual slowdown like STK)
+            if (speed > 60) {
+                speed -= 0.8;
+            }
+            
+            elements.speed.textContent = Math.round(speed);
+            
+            // Update track animation based on speed
+            const animationSpeed = Math.max(0.1, 1.2 - (speed / 150));
+            elements.trackLines.style.animationDuration = animationSpeed + 's';
+            
+            // Update progress (speed affects progress)
+            playerProgress += speed / 120;
+            opponentProgress += (70 + Math.sin(raceTime) * 15) / 120;
+            
+            // Update position
+            if (playerProgress > opponentProgress) {
+                elements.position.textContent = '1/2';
+                elements.positionIndicator.textContent = 'Position: 1/2 🥇';
+                elements.positionIndicator.style.background = 'rgba(0, 150, 0, 0.9)';
+            } else {
+                elements.position.textContent = '2/2';
+                elements.positionIndicator.textContent = 'Position: 2/2';
+                elements.positionIndicator.style.background = 'rgba(150, 0, 0, 0.9)';
+            }
+        }
+        
+        function endRace() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            
+            elements.gameControls.style.display = 'none';
+            elements.startBtn.style.display = 'block';
+            elements.startBtn.textContent = '🏁 RACE AGAIN';
+            
+            // Determine winner
+            if (playerProgress > opponentProgress) {
+                elements.status.textContent = '🏆 VICTORY! You mastered SuperTuxKart Power Rush!';
+                elements.status.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)';
+                elements.status.style.color = '#333';
+            } else {
+                elements.status.textContent = '🏁 Good race! Try collecting more powerups!';
+                elements.status.style.background = 'rgba(255, 107, 107, 0.8)';
+                elements.status.style.color = 'white';
+            }
+            
+            // Reset after 4 seconds
+            setTimeout(() => {
+                elements.status.style.background = 'rgba(0, 0, 0, 0.5)';
+                elements.status.style.color = 'white';
+                elements.status.textContent = 'Ready to experience authentic SuperTuxKart racing!';
+                elements.startBtn.textContent = '🏁 START POWER RUSH';
+            }, 4000);
+        }
+        
+        // Prevent mobile zoom/scroll
+        document.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
